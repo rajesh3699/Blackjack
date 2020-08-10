@@ -1,0 +1,221 @@
+import random
+
+deck={'Two':2,'Three':3,'Four':4,'Five':5,'Six':6,'Seven':7,'Eight':8,'Nine':9,'Ten':10,'FaceCard':10,'Ace':(1,11)}
+player=[]
+playerMoney=[]
+playerBet=[]
+dealer=[]
+names=[]
+flag=0
+lost=0
+win=0
+playerCopy=[]
+
+#Starting the gaming....
+def start():
+    global numberOfPlayers
+    no = 0
+    while no == 0:#avoiding no integer inputs
+        try:
+            numberOfPlayers = int( input( "Enter no. of players" ) )
+            no = 1
+        except:
+            print( "Number of players should be an integer" )
+            no = 0
+    for i in range( numberOfPlayers ):
+        player.append( [] )
+        playerMoney.append( 100 )
+        player[i].append( [] )
+        playerBet.append( [] )
+        names.append( input( "Enter the name of player.{}".format( i + 1 ) ) )
+    for i in player:
+        i[0].append(random.choice(list(deck)))
+        i[0].append(random.choice(list(deck)))
+    dealer.append(random.choice(list(deck)))
+    dealer.append(random.choice(list(deck)))
+    game()
+
+#Function to Print result
+def printResult(playerHand):
+    print("Your Hand has",' '.join(playerHand),"and total is",total(playerHand))
+
+#Function to calculate sum of cards
+def total(hand):
+    total=0
+    for card in hand:
+        if card=='Ace':#ace in player's favour
+            if total>=11:total+=1
+            else:total+=11
+        else:
+            total+=deck[card]
+    return total
+
+
+
+#check black jack condition
+def blackjack(playerHand,p,bet):
+    global win
+
+    if total(playerHand)==21:
+            print("Your hand has",' '.join(playerHand))
+            print("Congratulations! You got a Blackjack!\n")
+            playerMoney[player.index( p )] += 3*bet
+            win = 1
+            player.remove(p)
+            return True
+    return False
+
+#function for hit
+def hit(playerHand):
+    playerHand.append(random.choice(list(deck)))
+
+
+#actual Game Loop
+def game():
+    global playerCopy
+    playerCopy=player[:]
+    global flag
+    global lost
+    global win
+    for play in playerCopy:
+         for hand in play:
+                Bet=0
+                while Bet==0:# bet in a range and an integer
+                    try:
+                        Bet=int( input("How Much u would like to bet on this hand from 1 to 100 {}".format(names[playerCopy.index(play)]) ) )
+                        playerBet[player.index(play)].append(Bet)
+
+                    except:
+                        print("Bet should be number between 1 to 100\n")
+                        Bet=0
+
+                if not blackjack(hand,play,Bet):
+                    printResult(hand)
+                    print("The dealer hand has",dealer[0])
+                    if total(hand)>21:
+                        print("You Lost Bet on this Hand")
+                        playerMoney[player.index(play)]-=Bet
+                        lost=1
+                        player.remove(play)
+                    elif total(hand)<21:
+                        if len(hand)>1:
+                            if hand[1]==hand[0]:
+                                if hand[1]=='Ace':
+                                        flag=1
+                                split=input("Do u want to split?(y/n)")
+                                if split=='y':
+                                    play.append([hand[1]])
+                                    hand.pop(1)
+                                    hit( play[play.index( hand ) + 1] )
+
+                        doubleBet=input("Do you want to double ur bet?(y/n)")
+                        if doubleBet=='y':
+                            hit(hand)
+                            printResult( hand )
+                            if hand[-1 ] in hand[0:-2]:
+                                if hand[1]=='Ace':
+                                        flag=1
+                                split=input("Do u want to split?(y/n)")
+                                if split=='y':
+                                    play.append([hand[-1]])
+                                    hand.pop()
+                                    hit(play[play.index(hand)+1])
+                            if total( hand ) > 21:
+                                print( "{} Lost Bet on this Hand".format( names[playerCopy.index( play )] ) )
+                                playerMoney[player.index( play )] -= Bet
+                                lost = 1
+                                player.remove( play )
+
+                        else:
+                            while True:
+
+                                    choice=input("Do you want to hit or stand")
+                                    if choice=='stand':
+                                        break
+                                    elif choice=='hit':
+                                        hit(hand)
+                                        printResult( hand )
+                                        if hand[-1] in hand[0:-2]:
+                                            if hand[-1] == 'Ace':
+                                                flag = 1
+                                            split = input( "Do u want to split?(y/n)" )
+                                            if split == 'y':
+                                                play.append( [hand[-1]] )
+                                                hand.pop()
+                                                hit( play[play.index( hand ) + 1] )
+                                        if total( hand ) > 21:
+                                            print( "{} Lost Bet on this Hand".format( names[playerCopy.index( play )] ) )
+                                            playerMoney[player.index( play )] -= Bet
+                                            lost=1
+                                            play.remove(hand)
+                                            break
+
+                                    doubleBet = input( "Do you want to double ur bet?(y/n)" )
+                                    if doubleBet == 'y':
+                                        hit( hand )
+                                        printResult( hand )
+                                        if hand[-1] in hand[0:-2]:
+                                            if hand[-1] == 'Ace':
+                                                flag = 1
+                                            split = input( "Do u want to split?(y/n)" )
+                                            if split == 'y':
+                                                play.append( [hand[-1]] )
+                                                hand.pop()
+                                                hit( play[play.index( hand ) + 1] )
+                                        if total( hand ) > 21:
+                                            print( "{} Lost Bet on this Hand".format(names[playerCopy.index(play)]) )
+                                            playerMoney[player.index( play )] -= Bet
+                                            lost=1
+                                            play.remove(hand)
+                                        break
+                                    if total( hand ) > 21:
+                                        print( "{} Lost Bet on this Hand".format( names[playerCopy.index( play )] ) )
+                                        playerMoney[player.index( play )] -= Bet
+                                        lost=1
+                                        play.remove(hand)
+                                        break
+    while total( dealer ) < 17:
+        hit( dealer )
+    print("dealer hand has",' '.join(dealer))
+    if total(dealer)>21:
+        for play in player:
+            for hand in play:
+                print( "{} win  bet on this hand".format( names[playerCopy.index( play )] ) )
+                print( "The Dealer has", ' '.join( dealer ), "the total is", total( dealer ) )
+                print( "{} this hand has ".format( names[playerCopy.index( play )] ), ' '.join( hand ), "the total is",
+                       total( hand ) )
+                playerMoney[playerCopy.index( play )] += 2*Bet
+    else:
+        for play in player:
+            for hand in play:
+                if total(hand)>total(dealer) :
+                    print("{} win  bet on this hand".format(names[playerCopy.index(play)]))
+                    print("The Dealer has",' '.join(dealer),"the total is",total(dealer))
+                    print("{} this hand has ".format(names[playerCopy.index( play )]),' '.join(hand),"the total is",total(hand))
+                    playerMoney[playerCopy.index( play )] +=2*Bet
+                elif total(hand)<total(dealer) :
+                    print( "{} lose bet on this hand".format( names[playerCopy.index( play )] ) )
+                    print( "The Dealer has", ' '.join( dealer ), "the total is", total( dealer ) )
+                    print( "{} this hand has ".format(names[playerCopy.index( play )]), ' '.join( hand ), "the total is", total( hand ) )
+                    playerMoney[playerCopy.index(play)]-=Bet
+                else:
+                    print("{} had a draw on this hand".format(names[player.index(play)]))
+
+
+
+
+
+
+
+start()
+#final printing cash and cards
+for play in playerCopy:
+        print(names[playerCopy.index(play)],"has money",playerMoney[playerCopy.index(play)])
+        print("------*****-----")
+
+
+print(player)
+print(playerCopy)
+print(playerMoney)
+
+
